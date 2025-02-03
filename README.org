@@ -1,10 +1,8 @@
 * Sanitize Writing Script
-A Perl script that processes text files to replace specified patterns and sanitize smart quotes.
+A Perl script that processes text files to replace specified patterns.
 
 ** Description
-This script performs two main functions:
-1. Replaces smart quotes using a sed script
-2. Applies word-based pattern replacements defined in a configuration file
+This script applies word-based pattern replacements defined in a configuration file
 
 ** Prerequisites
 - Perl 5
@@ -13,18 +11,16 @@ This script performs two main functions:
   - File::Basename
   - Cwd
   - Getopt::Long
-- sed (command-line utility) (temporary hack for smart quotes - TODO get this working in Perl)
-
-** Installation
-No special installation is required. Ensure the script and its companion =sanitize-writing.sed= file are in the same directory.
 
 ** Usage
 #+BEGIN_SRC shell
-./sanitize-writing.pl --template=CONFIG_FILE text_file
+./sanitize-writing.pl --template=CONFIG_FILE [options] text_file
 #+END_SRC
 
-*** Parameters
-- =--template= :: Path to the configuration file containing replacement patterns
+*** Options
+- =--template=CONFIG_FILE= :: Path to the configuration file containing replacement patterns
+- =-b, --backup= :: Create a backup of the original file before processing
+- =--backup-file=FILENAME= :: Specify custom backup filename (optional, requires -b)
 - =text_file= :: Path to the text file to be processed
 
 *** Configuration File Format
@@ -47,9 +43,9 @@ dept=department
 #+END_SRC
 
 ** Features
-- Creates automatic backups before processing
-  - Original file: =.bak= extension
-  - Sed processing backup: =.sed.bak= extension (temporary hack for smart quote TODO fix)
+- Optional backup creation with -b flag
+  - Default backup uses =.bak= extension
+  - Custom backup filename supported
 - Word boundary matching to prevent partial word replacements
 - assumes UTF-8 encoding
 - Preserves original file on error
@@ -62,8 +58,8 @@ The script will exit with an error message if:
 
 ** Output
 - Reports each successful pattern replacement with count
-- Creates backup files before modifications
-- Displays completion message with backup location
+- Creates backup files when requested
+- Displays completion message
 
 ** Examples
 Process a document using a custom template:
@@ -71,9 +67,18 @@ Process a document using a custom template:
 ./sanitize-writing.pl --template=my_rules.conf document.txt
 #+END_SRC
 
+Create backup with default name (.bak extension):
+#+BEGIN_SRC shell
+./sanitize-writing.pl --template=my_rules.conf -b document.txt
+#+END_SRC
+
+Create backup with custom filename:
+#+BEGIN_SRC shell
+./sanitize-writing.pl --template=my_rules.conf -b --backup-file=document.backup.txt document.txt
+#+END_SRC
+
 ** Files
 - =sanitize-writing.pl= :: Main script
-- =sanitize-writing.sed= :: Sed script for smart quotes replacement
 - =CONFIG_FILE= :: User-provided replacement patterns
   - See =words-uk-to-us.txt= and =words-us-to-uk.txt= as examples
     (British to American and American to British English word replacements)
