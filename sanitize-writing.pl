@@ -1,10 +1,17 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+use utf8;
+use open qw(:std :encoding(UTF-8));
+use Encode qw(decode encode);
+use I18N::Langinfo qw(langinfo CODESET);
 use File::Copy;
 use File::Basename;
 use Cwd 'abs_path';
 use Getopt::Long;
+
+# Decode command line arguments
+@ARGV = map { decode("UTF-8", $_) } @ARGV;
 
 # Get the absolute path of the script and its directory
 my $script_path = abs_path($0);
@@ -41,26 +48,25 @@ if ($create_backup) {
 }
 
 # Read config file and create regex patterns
-open my $config_fh, '<', $config_file or die "Cannot open config file: $!";
+open my $config_fh, '<:encoding(UTF-8)', $config_file or die "Cannot open config file: $!";
 my @patterns;
 while (my $line = <$config_fh>) {
     chomp $line;
     # Skip empty lines and comments
     next if $line =~ /^\s*$/ || $line =~ /^\s*#/;
     
-# Parse config line in format: search=replace
-if ($line =~ /^([^=]+)=(.+)$/) {
-    my ($search, $replace) = ($1, $2);
-    # Escape any regex special characters in search and replace
-    $search = quotemeta($search);
-    $replace = quotemeta($replace);
-    # Create regex pattern with word boundaries
-    my $pattern = "s/\\b${search}\\b/${replace}/gi";
-    push @patterns, $pattern;
-} else {
-    warn "Invalid config line: $line\n";
-}
-
+    # Parse config line in format: search=replace
+    if ($line =~ /^([^=]+)=(.+)$/) {
+        my ($search, $replace) = ($1, $2);
+        # Escape any regex special characters in search and replace
+        $search = quotemeta($search);
+        $replace = quotemeta($replace);
+        # Create regex pattern with word boundaries and utf8 flag
+        my $pattern = "s/\\b${search}\\b/${replace}/giu";  # Added 'u' flag
+        push @patterns, $pattern;
+    } else {
+        warn "Invalid config line: $line\n";
+    }
 }
 close $config_fh;
 
